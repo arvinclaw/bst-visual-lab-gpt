@@ -15,18 +15,22 @@
 
 body {
   margin: 0;
+  position: relative;
+  overflow-x: hidden;
   font-family: "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text);
   background: radial-gradient(circle at 10% 0%, #ffffff 0%, #f0f5ff 30%, #f6f8fc 100%);
 }
 
 .bg-glow {
-  position: fixed;
-  inset: -20% auto auto -10%;
+  position: absolute;
+  top: -18vw;
+  left: -10vw;
   width: 45vw;
   height: 45vw;
   background: radial-gradient(circle, rgba(37, 99, 235, 0.10), rgba(37, 99, 235, 0));
   pointer-events: none;
+  z-index: 0;
 }
 
 .container {
@@ -34,6 +38,8 @@ body {
   margin: 40px auto 70px;
   display: grid;
   gap: 22px;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
