@@ -109,6 +109,10 @@ let isBusy = false;
 let zoomLevel = 1;
 let currentLayout = { width: 1200, height: 500 };
 
+const MIN_ZOOM = 0.35;
+const MAX_ZOOM = 2.2;
+const SOFT_NODE_LIMIT = 35;
+
 function resetTree() {
   bst.root = null;
   SAMPLE.forEach((v) => bst.insert(v));
@@ -141,9 +145,9 @@ function calculateLayout() {
 
   inorder(bst.root);
 
-  const width = Math.max(1200, (nodes.length + 1) * 92);
-  const yBase = 70;
-  const yStep = 90;
+  const width = Math.max(980, (nodes.length + 1) * 72);
+  const yBase = 68;
+  const yStep = 82;
   const height = Math.max(500, yBase + (maxDepth + 1) * yStep + 50);
   const xStep = width / (nodes.length + 1 || 1);
 
@@ -213,6 +217,17 @@ function centerTreeInViewport() {
   treeWrap.scrollTop = Math.max(0, Math.min(maxTop, Math.round(maxTop / 2)));
 }
 
+function autoFitZoom() {
+  if (!treeWrap) return;
+
+  const availableW = Math.max(1, treeWrap.clientWidth - 18);
+  const availableH = Math.max(1, treeWrap.clientHeight - 18);
+  const fitScale = Math.min(availableW / currentLayout.width, availableH / currentLayout.height);
+
+  // Auto-fit focuses on keeping full tree visible during insertion; avoid auto-upscaling past 100%.
+  zoomLevel = Math.max(MIN_ZOOM, Math.min(1, fitScale));
+}
+
 function applyZoom(shouldCenter = false) {
   const scaledWidth = Math.round(currentLayout.width * zoomLevel);
   const scaledHeight = Math.round(currentLayout.height * zoomLevel);
@@ -225,7 +240,9 @@ function applyZoom(shouldCenter = false) {
   }
 }
 
-function renderTree() {
+function renderTree(options = {}) {
+  const { shouldCenter = true, autoFit = false } = options;
+
   clearSvg();
   currentLayout = calculateLayout();
 
@@ -235,7 +252,9 @@ function renderTree() {
 
   drawEdges(bst.root);
   drawNodes(bst.root);
-  applyZoom(true);
+
+  if (autoFit) autoFitZoom();
+  applyZoom(shouldCenter);
   updateStats();
 }
 
@@ -359,7 +378,7 @@ async function runInsertAnimated(values) {
       await sleep(420);
     }
 
-    renderTree();
+    renderTree({ autoFit: true, shouldCenter: true });
     if (result.newNode) {
       markNode(result.newNode.id, "found");
     }
@@ -374,7 +393,10 @@ async function runInsertAnimated(values) {
   }
 
   appendTrace(`Animated insertion completed: ${inserted}/${values.length} inserted.`);
-  renderTree();
+  if (bst.countNodes() > SOFT_NODE_LIMIT) {
+    appendTrace(`Tip: node count is ${bst.countNodes()}. For readability, keep it around ${SOFT_NODE_LIMIT} or less.`);
+  }
+  renderTree({ autoFit: true, shouldCenter: true });
   setBusy(false);
 }
 
@@ -384,7 +406,10 @@ function runInsertInstant(values) {
     if (bst.insert(v)) inserted += 1;
   });
   appendTrace(`Inserted ${inserted}/${values.length} value(s). Duplicates are ignored.`);
-  renderTree();
+  if (bst.countNodes() > SOFT_NODE_LIMIT) {
+    appendTrace(`Tip: node count is ${bst.countNodes()}. For readability, keep it around ${SOFT_NODE_LIMIT} or less.`);
+  }
+  renderTree({ autoFit: true, shouldCenter: true });
 }
 
 insertBtn.addEventListener("click", async () => {
@@ -413,12 +438,12 @@ clearTraceBtn.addEventListener("click", () => {
 });
 
 zoomInBtn.addEventListener("click", () => {
-  zoomLevel = Math.min(2.2, +(zoomLevel + 0.1).toFixed(2));
+  zoomLevel = Math.min(MAX_ZOOM, +(zoomLevel + 0.1).toFixed(2));
   applyZoom(true);
 });
 
 zoomOutBtn.addEventListener("click", () => {
-  zoomLevel = Math.max(0.6, +(zoomLevel - 0.1).toFixed(2));
+  zoomLevel = Math.max(MIN_ZOOM, +(zoomLevel - 0.1).toFixed(2));
   applyZoom(true);
 });
 

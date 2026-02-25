@@ -93,6 +93,12 @@ h2 { margin-top: 0; }
   color: #334155;
 }
 
+.input-tip {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+}
+
 .input-group {
   display: flex;
   gap: 8px;
