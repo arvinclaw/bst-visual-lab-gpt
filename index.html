@@ -67,21 +67,16 @@
         <div class="controls">
           <div class="control-row">
             <label for="insertInput">Insert numbers (comma separated)</label>
-            <div class="input-group">
+            <div class="input-group insert-row">
               <input id="insertInput" placeholder="e.g. 55, 10, 65" />
+              <label class="mode-toggle" for="insertModeToggle" title="Enable to show step-by-step insertion process.">
+                <input id="insertModeToggle" type="checkbox" />
+                <span class="mode-switch" aria-hidden="true"></span>
+                <span class="mode-text">Show process</span>
+              </label>
               <button id="insertBtn">Insert</button>
             </div>
             <p class="input-tip">Tip: for clear visualization, keep total nodes ≤ 35.</p>
-          </div>
-
-          <div class="control-row">
-            <label for="insertMode">Insert mode</label>
-            <div class="input-group">
-              <select id="insertMode">
-                <option value="instant">Direct insert</option>
-                <option value="step">Show insertion process</option>
-              </select>
-            </div>
           </div>
 
           <div class="control-row">

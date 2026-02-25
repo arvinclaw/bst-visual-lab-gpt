@@ -104,6 +104,65 @@ h2 { margin-top: 0; }
   gap: 8px;
 }
 
+.insert-row {
+  align-items: center;
+}
+
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mode-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-switch {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: #cbd5e1;
+  position: relative;
+  transition: background .2s ease;
+}
+
+.mode-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform .2s ease;
+}
+
+.mode-toggle input:checked + .mode-switch {
+  background: var(--accent);
+}
+
+.mode-toggle input:checked + .mode-switch::after {
+  transform: translateX(14px);
+}
+
+.mode-text {
+  font-size: 0.88rem;
+  color: #334155;
+  font-weight: 600;
+}
+
 input,
 select {
   flex: 1;
@@ -162,6 +221,20 @@ button.secondary {
   padding: 14px;
 }
 
+.trace {
+  max-height: 220px;
+  min-height: 220px;
+  overflow-y: auto;
+}
+
+.trace h3 {
+  margin-top: 0;
+  position: sticky;
+  top: 0;
+  background: #fbfdff;
+  padding-bottom: 6px;
+}
+
 .trace ol {
   margin: 8px 0 0;
   padding-left: 20px;
@@ -176,8 +249,8 @@ button.secondary {
   width: 100%;
   max-width: 100%;
   overflow: auto;
-  max-height: 68vh;
-  min-height: 420px;
+  max-height: 76vh;
+  min-height: 560px;
   overscroll-behavior: contain;
 }
 
@@ -250,6 +323,9 @@ code {
 
 @media (max-width: 640px) {
   .card { padding: 18px; border-radius: 18px; }
-  .input-group { flex-direction: column; }
+  .input-group:not(.insert-row) { flex-direction: column; }
+  .insert-row { flex-wrap: wrap; }
+  .insert-row #insertInput { min-width: 180px; }
   button { width: 100%; }
+  .insert-row #insertBtn { width: auto; }
 }

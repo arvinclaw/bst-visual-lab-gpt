@@ -89,7 +89,7 @@ const svg = document.getElementById("treeSvg");
 const treeWrap = document.getElementById("treeWrap");
 const insertInput = document.getElementById("insertInput");
 const insertBtn = document.getElementById("insertBtn");
-const insertMode = document.getElementById("insertMode");
+const insertModeToggle = document.getElementById("insertModeToggle");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const resetBtn = document.getElementById("resetBtn");
@@ -279,14 +279,21 @@ function clearHighlight() {
 
 function clearTrace() {
   traceList.innerHTML = "";
+  const traceBox = traceList.closest(".trace");
+  if (traceBox) traceBox.scrollTop = 0;
   clearHighlight();
   updateStats("-", "-");
 }
 
-function appendTrace(text) {
+function appendTrace(text, autoFollow = true) {
   const li = document.createElement("li");
   li.textContent = text;
   traceList.appendChild(li);
+
+  if (autoFollow) {
+    const traceBox = traceList.closest(".trace");
+    if (traceBox) traceBox.scrollTop = traceBox.scrollHeight;
+  }
 }
 
 function complexityHint(height, steps) {
@@ -305,7 +312,7 @@ function sleep(ms) {
 
 function setBusy(next) {
   isBusy = next;
-  [insertBtn, searchBtn, resetBtn, clearTraceBtn, zoomInBtn, zoomOutBtn, zoomResetBtn, insertMode].forEach((el) => {
+  [insertBtn, searchBtn, resetBtn, clearTraceBtn, zoomInBtn, zoomOutBtn, zoomResetBtn, insertModeToggle].forEach((el) => {
     if (el) el.disabled = next;
   });
 }
@@ -418,7 +425,7 @@ insertBtn.addEventListener("click", async () => {
   if (!values.length) return;
 
   insertInput.value = "";
-  if (insertMode.value === "step") {
+  if (insertModeToggle.checked) {
     await runInsertAnimated(values);
   } else {
     runInsertInstant(values);
