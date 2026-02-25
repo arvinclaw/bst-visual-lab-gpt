@@ -90,6 +90,7 @@
           <div class="control-row inline">
             <button id="resetBtn" class="secondary">Reset to Sample Tree</button>
             <button id="clearTraceBtn" class="secondary">Clear Highlight</button>
+            <button id="skipBtn" class="secondary" disabled>Skip Animation</button>
           </div>
         </div>
 
@@ -119,18 +120,18 @@
       <section class="card quiz">
         <h2>Quick Checkpoint</h2>
         <div class="quiz-grid">
-          <article>
-            <p><strong>Q1:</strong> Why is heap not ideal for arbitrary value lookup?</p>
+          <details class="qa-item">
+            <summary><strong>Q1:</strong> Why is heap not ideal for arbitrary value lookup?</summary>
             <p class="answer">Because heap order only guarantees parent-child min/max property, not full sorted order for fast random search.</p>
-          </article>
-          <article>
-            <p><strong>Q2:</strong> What powers BST search speed?</p>
+          </details>
+          <details class="qa-item">
+            <summary><strong>Q2:</strong> What powers BST search speed?</summary>
             <p class="answer">The local ordering rule (left &lt; node &lt; right), enabling directional pruning at each step.</p>
-          </article>
-          <article>
-            <p><strong>Q3:</strong> Why can BST still degrade to O(n)?</p>
+          </details>
+          <details class="qa-item">
+            <summary><strong>Q3:</strong> Why can BST still degrade to O(n)?</summary>
             <p class="answer">If insertion order creates a skewed tree, height becomes n (like a linked list).</p>
-          </article>
+          </details>
         </div>
       </section>
     </main>

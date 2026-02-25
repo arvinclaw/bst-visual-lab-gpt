@@ -69,7 +69,8 @@ h2 { margin-top: 0; }
 }
 
 .concept-grid article,
-.quiz-grid article {
+.quiz-grid article,
+.qa-item {
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 16px;
@@ -219,6 +220,12 @@ button.secondary {
   box-shadow: none;
 }
 
+#skipBtn {
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  background: #fffbeb;
+}
+
 .inline {
   display: flex;
   gap: 10px;
@@ -333,8 +340,32 @@ button.secondary {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
+.qa-item {
+  padding: 12px 14px;
+}
+
+.qa-item summary {
+  cursor: pointer;
+  list-style: none;
+  color: #0f172a;
+}
+
+.qa-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.qa-item summary::after {
+  content: "＋";
+  float: right;
+  color: #64748b;
+}
+
+.qa-item[open] summary::after {
+  content: "－";
+}
+
 .answer {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   color: #1f2937;
 }
 

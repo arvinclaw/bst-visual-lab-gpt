@@ -94,6 +94,7 @@ const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const resetBtn = document.getElementById("resetBtn");
 const clearTraceBtn = document.getElementById("clearTraceBtn");
+const skipBtn = document.getElementById("skipBtn");
 const zoomInBtn = document.getElementById("zoomInBtn");
 const zoomOutBtn = document.getElementById("zoomOutBtn");
 const zoomResetBtn = document.getElementById("zoomResetBtn");
@@ -108,6 +109,7 @@ let currentHighlights = [];
 let isBusy = false;
 let zoomLevel = 1;
 let currentLayout = { width: 1200, height: 500 };
+let activeAnimation = null;
 
 const MIN_ZOOM = 0.35;
 const MAX_ZOOM = 2.2;
@@ -310,6 +312,33 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function sleepInterruptible(ms) {
+  const step = 30;
+  let elapsed = 0;
+  while (elapsed < ms) {
+    if (activeAnimation?.skipRequested) return;
+    const wait = Math.min(step, ms - elapsed);
+    await sleep(wait);
+    elapsed += wait;
+  }
+}
+
+function beginAnimation(type) {
+  activeAnimation = { type, skipRequested: false };
+  if (skipBtn) {
+    skipBtn.disabled = false;
+    skipBtn.textContent = `Skip ${type}`;
+  }
+}
+
+function endAnimation() {
+  activeAnimation = null;
+  if (skipBtn) {
+    skipBtn.disabled = true;
+    skipBtn.textContent = "Skip Animation";
+  }
+}
+
 function setBusy(next) {
   isBusy = next;
   [insertBtn, searchBtn, resetBtn, clearTraceBtn, zoomInBtn, zoomOutBtn, zoomResetBtn, insertModeToggle].forEach((el) => {
@@ -330,8 +359,11 @@ async function runSearch() {
   }
 
   setBusy(true);
+  beginAnimation("Search");
 
-  for (const step of result.path) {
+  let i = 0;
+  for (; i < result.path.length; i += 1) {
+    const step = result.path[i];
     markNode(step.node.id, "visited");
     if (step.decision === "left") {
       appendTrace(`${step.node.value}: target ${target} < ${step.node.value} → go LEFT`);
@@ -340,8 +372,25 @@ async function runSearch() {
     } else {
       appendTrace(`${step.node.value}: target ${target} found ✅`);
     }
-    await sleep(650);
+
+    await sleepInterruptible(650);
+    if (activeAnimation?.skipRequested) {
+      for (let j = i + 1; j < result.path.length; j += 1) {
+        const pending = result.path[j];
+        if (pending.decision === "left") {
+          appendTrace(`${pending.node.value}: target ${target} < ${pending.node.value} → go LEFT`);
+        } else if (pending.decision === "right") {
+          appendTrace(`${pending.node.value}: target ${target} > ${pending.node.value} → go RIGHT`);
+        } else {
+          appendTrace(`${pending.node.value}: target ${target} found ✅`);
+        }
+      }
+      break;
+    }
   }
+
+  clearHighlight();
+  result.path.forEach((s) => markNode(s.node.id, "visited"));
 
   if (result.found && result.path.length) {
     const finalNode = result.path[result.path.length - 1].node;
@@ -356,20 +405,39 @@ async function runSearch() {
 
   const steps = result.path.length;
   updateStats(steps, complexityHint(bst.getHeight(), steps));
+  endAnimation();
   setBusy(false);
 }
 
 async function runInsertAnimated(values) {
   setBusy(true);
+  beginAnimation("Insertion");
   let inserted = 0;
 
-  for (const v of values) {
+  for (let idx = 0; idx < values.length; idx += 1) {
+    const v = values[idx];
     clearHighlight();
     const result = bst.insertWithPath(v);
 
     if (!result.inserted) {
       appendTrace(`${v}: duplicate value, ignored.`);
-      await sleep(250);
+      await sleepInterruptible(250);
+      if (activeAnimation?.skipRequested) {
+        for (let k = idx + 1; k < values.length; k += 1) {
+          const fast = bst.insertWithPath(values[k]);
+          if (!fast.inserted) {
+            appendTrace(`${values[k]}: duplicate value, ignored.`);
+          } else {
+            inserted += 1;
+            fast.path.forEach((s) => {
+              if (s.decision === "left") appendTrace(`${s.node.value}: ${values[k]} < ${s.node.value} → go LEFT`);
+              else appendTrace(`${s.node.value}: ${values[k]} > ${s.node.value} → go RIGHT`);
+            });
+            appendTrace(fast.path.length === 0 ? `${values[k]}: tree was empty, inserted as root.` : `${values[k]}: inserted successfully.`);
+          }
+        }
+        break;
+      }
       continue;
     }
 
@@ -382,7 +450,8 @@ async function runInsertAnimated(values) {
       } else {
         appendTrace(`${step.node.value}: ${v} > ${step.node.value} → go RIGHT`);
       }
-      await sleep(420);
+      await sleepInterruptible(420);
+      if (activeAnimation?.skipRequested) break;
     }
 
     renderTree({ autoFit: true, shouldCenter: true });
@@ -396,7 +465,40 @@ async function runInsertAnimated(values) {
       appendTrace(`${v}: inserted successfully.`);
     }
 
-    await sleep(380);
+    if (activeAnimation?.skipRequested) {
+      for (let k = idx + 1; k < values.length; k += 1) {
+        const fast = bst.insertWithPath(values[k]);
+        if (!fast.inserted) {
+          appendTrace(`${values[k]}: duplicate value, ignored.`);
+        } else {
+          inserted += 1;
+          fast.path.forEach((s) => {
+            if (s.decision === "left") appendTrace(`${s.node.value}: ${values[k]} < ${s.node.value} → go LEFT`);
+            else appendTrace(`${s.node.value}: ${values[k]} > ${s.node.value} → go RIGHT`);
+          });
+          appendTrace(fast.path.length === 0 ? `${values[k]}: tree was empty, inserted as root.` : `${values[k]}: inserted successfully.`);
+        }
+      }
+      break;
+    }
+
+    await sleepInterruptible(380);
+    if (activeAnimation?.skipRequested) {
+      for (let k = idx + 1; k < values.length; k += 1) {
+        const fast = bst.insertWithPath(values[k]);
+        if (!fast.inserted) {
+          appendTrace(`${values[k]}: duplicate value, ignored.`);
+        } else {
+          inserted += 1;
+          fast.path.forEach((s) => {
+            if (s.decision === "left") appendTrace(`${s.node.value}: ${values[k]} < ${s.node.value} → go LEFT`);
+            else appendTrace(`${s.node.value}: ${values[k]} > ${s.node.value} → go RIGHT`);
+          });
+          appendTrace(fast.path.length === 0 ? `${values[k]}: tree was empty, inserted as root.` : `${values[k]}: inserted successfully.`);
+        }
+      }
+      break;
+    }
   }
 
   appendTrace(`Animated insertion completed: ${inserted}/${values.length} inserted.`);
@@ -404,6 +506,7 @@ async function runInsertAnimated(values) {
     appendTrace(`Tip: node count is ${bst.countNodes()}. For readability, keep it around ${SOFT_NODE_LIMIT} or less.`);
   }
   renderTree({ autoFit: true, shouldCenter: true });
+  endAnimation();
   setBusy(false);
 }
 
@@ -442,6 +545,12 @@ resetBtn.addEventListener("click", () => {
 clearTraceBtn.addEventListener("click", () => {
   if (isBusy) return;
   clearTrace();
+});
+
+skipBtn.addEventListener("click", () => {
+  if (!activeAnimation) return;
+  activeAnimation.skipRequested = true;
+  skipBtn.disabled = true;
 });
 
 zoomInBtn.addEventListener("click", () => {
