@@ -15,22 +15,10 @@
 
 body {
   margin: 0;
-  position: relative;
   overflow-x: hidden;
   font-family: "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--text);
   background: radial-gradient(circle at 10% 0%, #ffffff 0%, #f0f5ff 30%, #f6f8fc 100%);
-}
-
-.bg-glow {
-  position: absolute;
-  top: -18vw;
-  left: -10vw;
-  width: 45vw;
-  height: 45vw;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.10), rgba(37, 99, 235, 0));
-  pointer-events: none;
-  z-index: 0;
 }
 
 .container {
@@ -38,8 +26,6 @@ body {
   margin: 40px auto 70px;
   display: grid;
   gap: 22px;
-  position: relative;
-  z-index: 1;
 }
 
 .card {
@@ -112,12 +98,14 @@ h2 { margin-top: 0; }
   gap: 8px;
 }
 
-input {
+input,
+select {
   flex: 1;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 11px 12px;
   font-size: 0.95rem;
+  background: #fff;
 }
 
 button {
@@ -175,12 +163,23 @@ button.secondary {
 }
 
 .tree-wrap {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 68vh;
+  min-height: 420px;
 }
 
 #treeSvg {
-  width: 100%;
-  min-height: 420px;
+  display: block;
+  min-width: 100%;
+}
+
+.zoom-controls {
+  align-items: center;
+}
+
+.zoom-label {
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .node circle {

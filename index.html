@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="bg-glow"></div>
     <main class="container">
       <header class="hero card glass">
         <p class="eyebrow">Data Structures • Binary Search Trees</p>
@@ -75,6 +74,16 @@
           </div>
 
           <div class="control-row">
+            <label for="insertMode">Insert mode</label>
+            <div class="input-group">
+              <select id="insertMode">
+                <option value="instant">Direct insert</option>
+                <option value="step">Show insertion process</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="control-row">
             <label for="searchInput">Search target</label>
             <div class="input-group">
               <input id="searchInput" type="number" placeholder="e.g. 60" />
@@ -99,8 +108,15 @@
           <ol id="traceList"></ol>
         </div>
 
+        <div class="control-row inline zoom-controls">
+          <button id="zoomOutBtn" class="secondary">Zoom -</button>
+          <button id="zoomInBtn" class="secondary">Zoom +</button>
+          <button id="zoomResetBtn" class="secondary">Reset Zoom</button>
+          <span class="zoom-label">Scale: <strong id="zoomValue">100%</strong></span>
+        </div>
+
         <div class="tree-wrap card-soft">
-          <svg id="treeSvg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid meet"></svg>
+          <svg id="treeSvg" viewBox="0 0 1200 500" preserveAspectRatio="xMinYMin meet"></svg>
         </div>
       </section>
 

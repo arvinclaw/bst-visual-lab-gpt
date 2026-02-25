@@ -13,35 +13,53 @@ class BST {
   }
 
   insert(value) {
-    if (Number.isNaN(value)) return false;
-    const n = new Node(value);
+    return this.insertWithPath(value).inserted;
+  }
+
+  insertWithPath(value) {
+    if (Number.isNaN(value)) return { inserted: false, duplicate: false, path: [], newNode: null };
+
+    const newNode = new Node(value);
     if (!this.root) {
-      this.root = n;
-      return true;
+      this.root = newNode;
+      return { inserted: true, duplicate: false, path: [], newNode };
     }
+
+    const path = [];
     let cur = this.root;
     while (cur) {
-      if (value === cur.value) return false;
+      if (value === cur.value) {
+        return { inserted: false, duplicate: true, path, newNode: null };
+      }
+
       if (value < cur.value) {
+        path.push({ node: cur, decision: "left" });
         if (!cur.left) {
-          cur.left = n;
-          return true;
+          cur.left = newNode;
+          return { inserted: true, duplicate: false, path, newNode };
         }
         cur = cur.left;
       } else {
+        path.push({ node: cur, decision: "right" });
         if (!cur.right) {
-          cur.right = n;
-          return true;
+          cur.right = newNode;
+          return { inserted: true, duplicate: false, path, newNode };
         }
         cur = cur.right;
       }
     }
-    return false;
+
+    return { inserted: false, duplicate: false, path, newNode: null };
   }
 
   getHeight(node = this.root) {
     if (!node) return 0;
     return 1 + Math.max(this.getHeight(node.left), this.getHeight(node.right));
+  }
+
+  countNodes(node = this.root) {
+    if (!node) return 0;
+    return 1 + this.countNodes(node.left) + this.countNodes(node.right);
   }
 
   searchPath(target) {
@@ -70,10 +88,15 @@ const bst = new BST();
 const svg = document.getElementById("treeSvg");
 const insertInput = document.getElementById("insertInput");
 const insertBtn = document.getElementById("insertBtn");
+const insertMode = document.getElementById("insertMode");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const resetBtn = document.getElementById("resetBtn");
 const clearTraceBtn = document.getElementById("clearTraceBtn");
+const zoomInBtn = document.getElementById("zoomInBtn");
+const zoomOutBtn = document.getElementById("zoomOutBtn");
+const zoomResetBtn = document.getElementById("zoomResetBtn");
+const zoomValue = document.getElementById("zoomValue");
 const traceList = document.getElementById("traceList");
 const heightValue = document.getElementById("heightValue");
 const stepsValue = document.getElementById("stepsValue");
@@ -81,6 +104,9 @@ const complexityValue = document.getElementById("complexityValue");
 
 let nodePositions = new Map();
 let currentHighlights = [];
+let isBusy = false;
+let zoomLevel = 1;
+let currentLayout = { width: 1200, height: 500 };
 
 function resetTree() {
   bst.root = null;
@@ -102,20 +128,25 @@ function clearSvg() {
 
 function calculateLayout() {
   const nodes = [];
+  let maxDepth = 0;
+
   function inorder(node, depth = 0) {
     if (!node) return;
     inorder(node.left, depth + 1);
     nodes.push({ node, depth });
+    maxDepth = Math.max(maxDepth, depth);
     inorder(node.right, depth + 1);
   }
+
   inorder(bst.root);
 
-  const width = 1200;
-  const xStep = width / (nodes.length + 1 || 1);
+  const width = Math.max(1200, (nodes.length + 1) * 92);
   const yBase = 70;
-  const yStep = 84;
-  nodePositions = new Map();
+  const yStep = 90;
+  const height = Math.max(500, yBase + (maxDepth + 1) * yStep + 50);
+  const xStep = width / (nodes.length + 1 || 1);
 
+  nodePositions = new Map();
   nodes.forEach((entry, i) => {
     nodePositions.set(entry.node.id, {
       x: xStep * (i + 1),
@@ -124,6 +155,8 @@ function calculateLayout() {
       depth: entry.depth,
     });
   });
+
+  return { width, height, maxDepth, count: nodes.length };
 }
 
 function drawEdges(node) {
@@ -169,11 +202,25 @@ function drawNodes(node) {
   drawNodes(node.right);
 }
 
+function applyZoom() {
+  const scaledWidth = Math.round(currentLayout.width * zoomLevel);
+  const scaledHeight = Math.round(currentLayout.height * zoomLevel);
+  svg.style.width = `${scaledWidth}px`;
+  svg.style.height = `${scaledHeight}px`;
+  zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+}
+
 function renderTree() {
   clearSvg();
-  calculateLayout();
+  currentLayout = calculateLayout();
+
+  svg.setAttribute("viewBox", `0 0 ${currentLayout.width} ${currentLayout.height}`);
+  svg.setAttribute("width", String(currentLayout.width));
+  svg.setAttribute("height", String(currentLayout.height));
+
   drawEdges(bst.root);
   drawNodes(bst.root);
+  applyZoom();
   updateStats();
 }
 
@@ -209,8 +256,9 @@ function appendTrace(text) {
 }
 
 function complexityHint(height, steps) {
-  if (height <= 0 || steps <= 0) return "-";
-  const balancedThreshold = Math.ceil(Math.log2(SAMPLE.length + 8));
+  const nodeCount = bst.countNodes();
+  if (height <= 0 || steps <= 0 || nodeCount <= 0) return "-";
+  const balancedThreshold = Math.ceil(Math.log2(nodeCount + 1));
   if (height <= balancedThreshold + 1) {
     return `Likely near balanced: search ≈ O(log n), actual steps: ${steps}`;
   }
@@ -221,7 +269,15 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function setBusy(next) {
+  isBusy = next;
+  [insertBtn, searchBtn, resetBtn, clearTraceBtn, zoomInBtn, zoomOutBtn, zoomResetBtn, insertMode].forEach((el) => {
+    if (el) el.disabled = next;
+  });
+}
+
 async function runSearch() {
+  if (isBusy) return;
   const target = Number(searchInput.value);
   if (Number.isNaN(target)) return;
   clearTrace();
@@ -232,8 +288,7 @@ async function runSearch() {
     return;
   }
 
-  searchBtn.disabled = true;
-  insertBtn.disabled = true;
+  setBusy(true);
 
   for (const step of result.path) {
     markNode(step.node.id, "visited");
@@ -260,25 +315,101 @@ async function runSearch() {
 
   const steps = result.path.length;
   updateStats(steps, complexityHint(bst.getHeight(), steps));
-  searchBtn.disabled = false;
-  insertBtn.disabled = false;
+  setBusy(false);
 }
 
-insertBtn.addEventListener("click", () => {
-  const values = parseNumbers(insertInput.value);
-  if (!values.length) return;
+async function runInsertAnimated(values) {
+  setBusy(true);
+  let inserted = 0;
+
+  for (const v of values) {
+    clearHighlight();
+    const result = bst.insertWithPath(v);
+
+    if (!result.inserted) {
+      appendTrace(`${v}: duplicate value, ignored.`);
+      await sleep(250);
+      continue;
+    }
+
+    inserted += 1;
+
+    for (const step of result.path) {
+      markNode(step.node.id, "visited");
+      if (step.decision === "left") {
+        appendTrace(`${step.node.value}: ${v} < ${step.node.value} → go LEFT`);
+      } else {
+        appendTrace(`${step.node.value}: ${v} > ${step.node.value} → go RIGHT`);
+      }
+      await sleep(420);
+    }
+
+    renderTree();
+    if (result.newNode) {
+      markNode(result.newNode.id, "found");
+    }
+
+    if (result.path.length === 0) {
+      appendTrace(`${v}: tree was empty, inserted as root.`);
+    } else {
+      appendTrace(`${v}: inserted successfully.`);
+    }
+
+    await sleep(380);
+  }
+
+  appendTrace(`Animated insertion completed: ${inserted}/${values.length} inserted.`);
+  renderTree();
+  setBusy(false);
+}
+
+function runInsertInstant(values) {
   let inserted = 0;
   values.forEach((v) => {
     if (bst.insert(v)) inserted += 1;
   });
   appendTrace(`Inserted ${inserted}/${values.length} value(s). Duplicates are ignored.`);
-  insertInput.value = "";
   renderTree();
+}
+
+insertBtn.addEventListener("click", async () => {
+  if (isBusy) return;
+  const values = parseNumbers(insertInput.value);
+  if (!values.length) return;
+
+  insertInput.value = "";
+  if (insertMode.value === "step") {
+    await runInsertAnimated(values);
+  } else {
+    runInsertInstant(values);
+  }
 });
 
 searchBtn.addEventListener("click", runSearch);
 
-resetBtn.addEventListener("click", resetTree);
-clearTraceBtn.addEventListener("click", clearTrace);
+resetBtn.addEventListener("click", () => {
+  if (isBusy) return;
+  resetTree();
+});
+
+clearTraceBtn.addEventListener("click", () => {
+  if (isBusy) return;
+  clearTrace();
+});
+
+zoomInBtn.addEventListener("click", () => {
+  zoomLevel = Math.min(2.2, +(zoomLevel + 0.1).toFixed(2));
+  applyZoom();
+});
+
+zoomOutBtn.addEventListener("click", () => {
+  zoomLevel = Math.max(0.6, +(zoomLevel - 0.1).toFixed(2));
+  applyZoom();
+});
+
+zoomResetBtn.addEventListener("click", () => {
+  zoomLevel = 1;
+  applyZoom();
+});
 
 resetTree();
