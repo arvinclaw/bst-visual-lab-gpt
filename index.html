@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BST Visual Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-glow"></div>
+    <main class="container">
+      <header class="hero card glass">
+        <p class="eyebrow">Data Structures • Binary Search Trees</p>
+        <h1>From Binary Search to BST</h1>
+        <p>
+          A clean, visual way to understand why BSTs make searching dynamic data fast.
+        </p>
+      </header>
+
+      <section class="card glass announcement">
+        <h2>Class Context (from the slide)</h2>
+        <ul>
+          <li>Midterm/review reminder: focus on search-related reasoning, not just definitions.</li>
+          <li>Goal: understand <strong>why</strong> BST exists, not only how to code insert/search.</li>
+          <li>Key bridge: sorted-array binary search idea → tree-based dynamic structure.</li>
+        </ul>
+      </section>
+
+      <section class="card concept">
+        <h2>Core Idea in 3 Steps</h2>
+        <div class="concept-grid">
+          <article>
+            <h3>1) Why not any Binary Tree / Heap?</h3>
+            <p>
+              In a general binary tree, values have no ordering rule. For arbitrary search,
+              you may scan many nodes. A heap only guarantees parent-child priority (min/max),
+              not fast lookup for a random target.
+            </p>
+            <p class="muted">Search intuition: often close to <code>O(n)</code>.</p>
+          </article>
+          <article>
+            <h3>2) Binary Search on Sorted Array</h3>
+            <p>
+              Sorted data lets us cut the search space in half each comparison:
+              smaller go left half, larger go right half.
+            </p>
+            <p class="muted">Search time: <code>O(log n)</code> for static sorted arrays.</p>
+          </article>
+          <article>
+            <h3>3) Map that rule to a Tree (BST)</h3>
+            <p>
+              BST keeps the ordering rule at each node:
+              <strong>left &lt; node &lt; right</strong>. So each decision discards half-ish of
+              remaining structure (when balanced), while still supporting insertions.
+            </p>
+            <p class="muted">Search time: <code>O(h)</code>, balanced ≈ <code>O(log n)</code>, worst <code>O(n)</code>.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="card demo">
+        <h2>Interactive BST Demo</h2>
+        <p class="muted">
+          Try inserting values, then search and watch each left/right decision highlighted.
+          Preloaded sample values: <code>50, 30, 70, 20, 40, 60, 80</code>
+        </p>
+
+        <div class="controls">
+          <div class="control-row">
+            <label for="insertInput">Insert numbers (comma separated)</label>
+            <div class="input-group">
+              <input id="insertInput" placeholder="e.g. 55, 10, 65" />
+              <button id="insertBtn">Insert</button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <label for="searchInput">Search target</label>
+            <div class="input-group">
+              <input id="searchInput" type="number" placeholder="e.g. 60" />
+              <button id="searchBtn">Search Step-by-Step</button>
+            </div>
+          </div>
+
+          <div class="control-row inline">
+            <button id="resetBtn" class="secondary">Reset to Sample Tree</button>
+            <button id="clearTraceBtn" class="secondary">Clear Highlight</button>
+          </div>
+        </div>
+
+        <div class="stats glass">
+          <p><strong>Tree height:</strong> <span id="heightValue">-</span></p>
+          <p><strong>Last search steps:</strong> <span id="stepsValue">-</span></p>
+          <p><strong>Complexity intuition:</strong> <span id="complexityValue">-</span></p>
+        </div>
+
+        <div class="trace card-soft">
+          <h3>Traversal Log</h3>
+          <ol id="traceList"></ol>
+        </div>
+
+        <div class="tree-wrap card-soft">
+          <svg id="treeSvg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+      </section>
+
+      <section class="card quiz">
+        <h2>Quick Checkpoint</h2>
+        <div class="quiz-grid">
+          <article>
+            <p><strong>Q1:</strong> Why is heap not ideal for arbitrary value lookup?</p>
+            <p class="answer">Because heap order only guarantees parent-child min/max property, not full sorted order for fast random search.</p>
+          </article>
+          <article>
+            <p><strong>Q2:</strong> What powers BST search speed?</p>
+            <p class="answer">The local ordering rule (left &lt; node &lt; right), enabling directional pruning at each step.</p>
+          </article>
+          <article>
+            <p><strong>Q3:</strong> Why can BST still degrade to O(n)?</p>
+            <p class="answer">If insertion order creates a skewed tree, height becomes n (like a linked list).</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
