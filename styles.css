@@ -111,8 +111,10 @@ h2 { margin-top: 0; }
 .mode-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 12px;
+  justify-content: center;
+  min-width: 158px;
+  height: 40px;
+  padding: 7px 14px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: linear-gradient(90deg, #2563eb 0%, #3b82f6 100%);
@@ -122,7 +124,7 @@ h2 { margin-top: 0; }
   white-space: nowrap;
   position: relative;
   overflow: hidden;
-  transition: border-color .24s ease, color .24s ease, box-shadow .24s ease;
+  transition: border-color .24s ease, box-shadow .24s ease;
 }
 
 .mode-toggle::before {
@@ -137,7 +139,7 @@ h2 { margin-top: 0; }
 
 .mode-toggle > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .mode-toggle input {
@@ -147,46 +149,25 @@ h2 { margin-top: 0; }
 }
 
 .mode-switch {
-  width: 42px;
-  height: 24px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.14);
-  position: relative;
-}
-
-.mode-switch::after {
-  content: "";
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
+  top: 50%;
+  left: 6px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
-  transition: transform .24s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.28);
+  transform: translateY(-50%);
+  transition: left .24s ease;
+  z-index: 1;
 }
 
-.mode-toggle input:checked + .mode-switch::after {
-  transform: translateX(18px);
-}
-
-.mode-toggle input:checked ~ .mode-text {
-  color: #fff;
-}
-
-.mode-toggle input:checked ~ .mode-switch {
-  background: rgba(255, 255, 255, 0.24);
-}
-
-.mode-toggle input:checked ~ .mode-text,
 .mode-toggle input:checked + .mode-switch {
-  transition: color .24s ease, background .24s ease;
+  left: calc(100% - 30px);
 }
 
 .mode-toggle:has(input:checked) {
   border-color: #2563eb;
-  color: #fff;
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.25);
 }
 
@@ -199,6 +180,11 @@ h2 { margin-top: 0; }
   color: #111827;
   font-weight: 600;
   transition: color .24s ease;
+  padding: 0 30px;
+}
+
+.mode-toggle input:checked ~ .mode-text {
+  color: #fff;
 }
 
 input:not([type="checkbox"]),
