@@ -86,6 +86,7 @@ const SAMPLE = [50, 30, 70, 20, 40, 60, 80];
 const bst = new BST();
 
 const svg = document.getElementById("treeSvg");
+const treeWrap = document.getElementById("treeWrap");
 const insertInput = document.getElementById("insertInput");
 const insertBtn = document.getElementById("insertBtn");
 const insertMode = document.getElementById("insertMode");
@@ -202,12 +203,26 @@ function drawNodes(node) {
   drawNodes(node.right);
 }
 
-function applyZoom() {
+function centerTreeInViewport() {
+  if (!treeWrap) return;
+
+  const maxLeft = Math.max(0, treeWrap.scrollWidth - treeWrap.clientWidth);
+  const maxTop = Math.max(0, treeWrap.scrollHeight - treeWrap.clientHeight);
+
+  treeWrap.scrollLeft = Math.max(0, Math.min(maxLeft, Math.round(maxLeft / 2)));
+  treeWrap.scrollTop = Math.max(0, Math.min(maxTop, Math.round(maxTop / 2)));
+}
+
+function applyZoom(shouldCenter = false) {
   const scaledWidth = Math.round(currentLayout.width * zoomLevel);
   const scaledHeight = Math.round(currentLayout.height * zoomLevel);
   svg.style.width = `${scaledWidth}px`;
   svg.style.height = `${scaledHeight}px`;
   zoomValue.textContent = `${Math.round(zoomLevel * 100)}%`;
+
+  if (shouldCenter) {
+    requestAnimationFrame(centerTreeInViewport);
+  }
 }
 
 function renderTree() {
@@ -220,7 +235,7 @@ function renderTree() {
 
   drawEdges(bst.root);
   drawNodes(bst.root);
-  applyZoom();
+  applyZoom(true);
   updateStats();
 }
 
@@ -399,17 +414,17 @@ clearTraceBtn.addEventListener("click", () => {
 
 zoomInBtn.addEventListener("click", () => {
   zoomLevel = Math.min(2.2, +(zoomLevel + 0.1).toFixed(2));
-  applyZoom();
+  applyZoom(true);
 });
 
 zoomOutBtn.addEventListener("click", () => {
   zoomLevel = Math.max(0.6, +(zoomLevel - 0.1).toFixed(2));
-  applyZoom();
+  applyZoom(true);
 });
 
 zoomResetBtn.addEventListener("click", () => {
   zoomLevel = 1;
-  applyZoom();
+  applyZoom(true);
 });
 
 resetTree();
